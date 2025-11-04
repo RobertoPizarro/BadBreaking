@@ -2,7 +2,6 @@ import oracledb
 import os
 
 def get_db_connection():
-    """Creates and returns a connection to the Oracle database."""
     try:
         connection = oracledb.connect(
             user=os.environ.get("DB_USER"),
@@ -15,6 +14,5 @@ def get_db_connection():
         return None
 
 def close_db_connection(connection):
-    """Closes the database connection."""
     if connection:
         connection.close()
