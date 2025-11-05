@@ -1,12 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello World</title>
-  </head>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Farmacia - Sistema de Gestión</title>
+    <style>
+        body { font-family: Arial; max-width: 1200px; margin: 50px auto; padding: 20px; }
+        .section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🏥 Sistema de Farmacia Oracle</h1>
 
-  <body>
-    <h1>Hello World</h1>
-  </body>
+    <!-- SECCIÓN REPORTES -->
+    <div class="section">
+        <h2>📊 Reportes Dinámicos (PL/SQL)</h2>
+        <button onclick="cargarReporte('top-vendidos')">Top 5 Más Vendidos</button>
+        <button onclick="cargarReporte('proximos-vencer')">Próximos a Vencer</button>
+        <button onclick="cargarReporte('sin-stock')">Sin Stock</button>
+        <button onclick="cargarReporte('ingresos-mensuales')">Ingresos por Mes</button>
+        <div id="resultados"></div>
+    </div>
+
+    <!-- SECCIÓN VENTAS -->
+    <div class="section">
+        <h2>💰 Registrar Venta (Activa Trigger de Stock)</h2>
+        <button onclick="simularVenta()">Simular Venta de Prueba</button>
+        <div id="ventaResultado"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api';
+
+        async function cargarReporte(tipo) {
+            const div = document.getElementById('resultados');
+            div.innerHTML = '<p>⏳ Cargando desde Oracle...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/reportes/${tipo}`);
+                const data = await res.json();
+
+                if (data.estado === 'exito') {
+                    let html = `<h3>Resultados: ${data.total || data.datos.length} registros</h3>`;
+                    html += '<table><thead><tr>';
+
+                    // Encabezados
+                    const keys = Object.keys(data.datos[0] || {});
+                    keys.forEach(k => html += `<th>${k.toUpperCase()}</th>`);
+                    html += '</tr></thead><tbody>';
+
+                    // Filas
+                    data.datos.forEach(row => {
+                        html += '<tr>';
+                        keys.forEach(k => html += `<td>${row[k]}</td>`);
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                    div.innerHTML = html;
+                } else {
+                    div.innerHTML = `<p style="color:red">❌ ${data.mensaje}</p>`;
+                }
+            } catch (e) {
+                div.innerHTML = `<p style="color:red">❌ Error: ${e.message}</p>`;
+            }
+        }
+
+        async function simularVenta() {
+            const div = document.getElementById('ventaResultado');
+            div.innerHTML = '<p>⏳ Procesando venta (trigger reducirá stock)...</p>';
+
+            const venta = {
+                id_cliente: 1,
+                id_empleado: 1,
+                total_venta: 5.00,
+                detalles: [
+                    { id_medicamento: 1, cantidad: 2, precio_unitario_venta: 1.00 },
+                    { id_medicamento: 3, cantidad: 2, precio_unitario_venta: 1.50 }
+                ]
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/ventas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(venta)
+                });
+                const data = await res.json();
+
+                if (data.estado === 'exito') {
+                    div.innerHTML = `<p style="color:green">✅ Venta ID ${data.id_venta} registrada. El trigger actualizó el stock automáticamente.</p>`;
+                } else {
+                    div.innerHTML = `<p style="color:red">❌ ${data.mensaje}</p>`;
+                }
+            } catch (e) {
+                div.innerHTML = `<p style="color:red">❌ Error: ${e.message}</p>`;
+            }
+        }
+    </script>
+</body>
 </html>
