@@ -1,6 +1,6 @@
-
 import os
-from flask import Flask, send_file, jsonify # Importamos jsonify
+from flask import Flask, send_file, jsonify
+from flask_cors import CORS  # ← NUEVO: Importar CORS
 from dotenv import load_dotenv
 
 # Carga las variables de entorno desde el archivo .env
@@ -14,6 +14,9 @@ from src.blueprints.ventas import ventas_bp
 
 # --- Creación y Configuración de la App ---
 app = Flask(__name__)
+
+# ← NUEVO: Habilitar CORS para todas las rutas
+CORS(app)
 
 # Guardamos las credenciales en la config para referencia
 app.config.update(
@@ -47,14 +50,12 @@ def db_test():
 
     connection = get_db_connection()
     if not connection:
-        # La función get_db_connection ya imprime el error detallado en la consola.
         return jsonify({
             "estado": "error",
             "mensaje": "La conexión inicial a la base de datos falló. Revisa las credenciales en .env y la salida de la consola de Flask."
-        }), 503 # 503 Service Unavailable
+        }), 503
 
     try:
-        # Ejecutar una consulta simple para verificar que la conexión está viva
         cursor = connection.cursor()
         cursor.execute("SELECT 1 FROM DUAL")
         cursor.fetchone()
