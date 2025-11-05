@@ -10,7 +10,7 @@ def get_db_connection():
         )
         return connection
     except oracledb.Error as e:
-        print(f"Error connecting to Oracle Database: {e}")
+        print(f"Error conectando a la base de datos pipipi: {e}")
         return None
 
 def close_db_connection(connection):
