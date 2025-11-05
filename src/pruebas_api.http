@@ -1,0 +1,25 @@
+### Registrar un nuevo medicamento
+POST http://127.0.0.1:8080/api/medicamentos
+Content-Type: application/json
+
+{
+  "nombre": "Ibuprofeno 600mg",
+  "descripcion": "Analgésico y antiinflamatorio",
+  "id_categoria": 1,
+  "precio_compra": 3.50,
+  "precio_venta": 7.00,
+  "stock": 50,
+  "fecha_vencimiento": "2027-01-31",
+  "lote": "LOTE-IBU-002",
+  "id_proveedor": 1,
+  "ubicacion": "Estante A-3"
+}
+
+### Editar el precio de un medicamento
+PUT http://127.0.0.1:8080/api/medicamentos/6/precio
+Content-Type: application/json
+
+{
+  "nuevo_precio_compra": 4.00,
+  "nuevo_precio_venta": 8.00
+}
