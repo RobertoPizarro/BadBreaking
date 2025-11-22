@@ -135,6 +135,7 @@ async function cargarMedicamentos() {
 
 async function editarPrecio(id) {
     const modal = document.getElementById('modalEditar');
+    // CAMBIO DE COLOR AQUÍ: #0277bd
     document.getElementById('contenidoModalEditar').innerHTML = `
         <form id="formEditarPrecio">
             <div class="form-group"><label>Nuevo Precio Compra</label><input type="number" id="nuevoPrecioCompra" step="0.01" required></div>
@@ -306,7 +307,12 @@ async function verDetalleVenta(id) {
         const data = await res.json();
         if (data.estado === 'exito') {
             const v = data.datos;
-            let html = `<div style="background:#f8f9fa;padding:20px;border-radius:10px;margin-bottom:20px;"><h3>Venta #${v.id_venta}</h3><p>Cliente: ${v.cliente}</p><p>Total: <strong>S/. ${v.total_venta}</strong></p></div>
+            // CAMBIO DE COLOR AQUÍ: #0277bd
+            let html = `<div style="background:#f1f8e9;padding:20px;border-radius:10px;margin-bottom:20px;border:1px solid #c5e1a5;">
+                <h3 style="color:#2e7d32;">Venta #${v.id_venta}</h3>
+                <p>Cliente: ${v.cliente}</p>
+                <p>Total: <strong style="color:#0277bd; font-size:1.2em;">S/. ${v.total_venta}</strong></p>
+            </div>
             <div class="table-container"><table><thead><tr><th>Medicamento</th><th>Cant</th><th>P. Unit</th><th>Subtotal</th></tr></thead><tbody>`;
             v.detalles.forEach(d => html += `<tr><td>${d.medicamento}</td><td>${d.cantidad}</td><td>${d.precio_unitario_venta}</td><td>${d.subtotal}</td></tr>`);
             cont.innerHTML = html + '</tbody></table></div><button class="btn" onclick="cerrarModal(\'modalEditar\')">Cerrar</button>';
