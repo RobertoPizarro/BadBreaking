@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Farmacia - Medicamentos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header><h1><i class="fa-solid fa-hospital"></i> Sistema de Gestión</h1></header>
+        <div class="tabs">
+            <a href="dashboard.html" class="tab"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="medicamentos.html" class="tab active"><i class="fa-solid fa-pills"></i> Medicamentos</a>
+            <a href="ventas.html" class="tab"><i class="fa-solid fa-cash-register"></i> Ventas</a>
+            <a href="reportes.html" class="tab"><i class="fa-solid fa-chart-line"></i> Reportes</a>
+        </div>
+        <div class="tab-content active">
+            <div class="form-section">
+                <h2><i class="fa-solid fa-plus"></i> Nuevo Medicamento</h2>
+                <form onsubmit="registrarMedicamento(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Nombre</label><input type="text" name="p_nombre" required></div>
+                        <div class="form-group"><label>Categoría</label><select name="p_id_categoria" id="selectCategoria" required><option value="">...</option></select></div>
+                        <div class="form-group"><label>Proveedor</label><select name="p_id_proveedor" id="selectProveedor"><option value="">...</option></select></div>
+                        <div class="form-group"><label>Stock</label><input type="number" name="p_stock" required></div>
+                        <div class="form-group"><label>P. Compra</label><input type="number" name="p_precio_compra" step="0.01" required></div>
+                        <div class="form-group"><label>P. Venta</label><input type="number" name="p_precio_venta" step="0.01" required></div>
+                        <div class="form-group"><label>Vencimiento</label><input type="date" name="p_fecha_vencimiento" required></div>
+                        <div class="form-group"><label>Lote</label><input type="text" name="p_lote" required></div>
+                        <div class="form-group"><label>Ubicación</label><input type="text" name="p_ubicacion"></div>
+                    </div>
+                    <button type="submit" class="btn"><i class="fa-solid fa-check"></i> Registrar</button>
+                </form>
+                <div id="resultadoRegistro"></div>
+            </div>
+            <div class="form-section">
+                <h2><i class="fa-solid fa-list"></i> Listado</h2>
+                <button class="btn" onclick="cargarMedicamentos()"><i class="fa-solid fa-sync"></i> Actualizar</button>
+                <div id="listadoMedicamentos"></div>
+            </div>
+        </div>
+    </div>
+    <div id="modalEditar" class="modal"><div class="modal-content"><div class="modal-header"><h2>Editar</h2><span class="close" onclick="cerrarModal('modalEditar')">&times;</span></div><div id="contenidoModalEditar"></div></div></div>
+    <script src="main.js"></script>
+</body>
+</html>

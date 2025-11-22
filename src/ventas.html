@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Farmacia - Ventas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header><h1><i class="fa-solid fa-hospital"></i> Sistema de Gestión</h1></header>
+        <div class="tabs">
+            <a href="dashboard.html" class="tab"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="medicamentos.html" class="tab"><i class="fa-solid fa-pills"></i> Medicamentos</a>
+            <a href="ventas.html" class="tab active"><i class="fa-solid fa-cash-register"></i> Ventas</a>
+            <a href="reportes.html" class="tab"><i class="fa-solid fa-chart-line"></i> Reportes</a>
+        </div>
+        <div class="tab-content active">
+            <div class="form-section">
+                <h2><i class="fa-solid fa-cart-shopping"></i> Nueva Venta</h2>
+                <form id="formVenta">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Cliente</label><select id="selectCliente" required><option value="">...</option></select></div>
+                        <div class="form-group"><label>Empleado</label><select id="selectEmpleado" required><option value="">...</option></select></div>
+                    </div>
+                    <h3 style="color:#667eea;margin:20px 0;">Detalles</h3>
+                    <div id="detallesVenta"></div>
+                    <button type="button" class="btn btn-secondary" onclick="agregarDetalle()"><i class="fa-solid fa-plus"></i> Agregar</button>
+                    <h3 style="margin-top:20px;color:#667eea;">Total: S/. <span id="totalVenta">0.00</span></h3>
+                    <div class="btn-group" style="margin-top:20px;">
+                        <button type="button" class="btn btn-success" onclick="procesarVenta()"><i class="fa-solid fa-check"></i> Procesar</button>
+                        <button type="button" class="btn btn-danger" onclick="limpiarFormularioVenta()"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                    </div>
+                </form>
+                <div id="resultadoVenta"></div>
+            </div>
+            <div class="form-section">
+                <h2><i class="fa-solid fa-scroll"></i> Historial</h2>
+                <button class="btn" onclick="cargarVentas()"><i class="fa-solid fa-sync"></i> Actualizar</button>
+                <div id="historialVentas"></div>
+            </div>
+        </div>
+    </div>
+    <div id="modalEditar" class="modal"><div class="modal-content"><div class="modal-header"><h2>Detalle Venta</h2><span class="close" onclick="cerrarModal('modalEditar')">&times;</span></div><div id="contenidoModalEditar"></div></div></div>
+    <script src="main.js"></script>
+</body>
+</html>

@@ -6,16 +6,16 @@ POST http://127.0.0.1:8080/api/medicamentos
 Content-Type: application/json
 
 {
-  "nombre": "Ibuprofeno 600mg",
-  "descripcion": "Analgésico y antiinflamatorio",
-  "id_categoria": 1,
-  "precio_compra": 3.50,
-  "precio_venta": 7.00,
-  "stock": 50,
-  "fecha_vencimiento": "2027-01-31",
-  "lote": "LOTE-IBU-002",
-  "id_proveedor": 1,
-  "ubicacion": "Estante A-3"
+  "p_nombre": "Ibuprofeno 600mg",
+  "p_descripcion": "Analgésico y antiinflamatorio",
+  "p_id_categoria": 1,
+  "p_precio_compra": 3.50,
+  "p_precio_venta": 7.00,
+  "p_stock": 50,
+  "p_fecha_vencimiento": "2027-01-31",
+  "p_lote": "LOTE-IBU-002",
+  "p_id_proveedor": 1,
+  "p_ubicacion": "Estante A-3"
 }
 
 ### Editar el precio de un medicamento
