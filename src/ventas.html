@@ -23,9 +23,40 @@
             <div class="form-section">
                 <h2><i class="fa-solid fa-cart-shopping"></i> Nueva Venta</h2>
                 <form id="formVenta">
+                    <div class="form-section" style="margin-bottom: 20px; padding: 15px; border: 1px solid #b3e5fc; border-radius: 10px;">
+                        <h3 style="color:#0277bd; margin-bottom: 15px;">Datos del Cliente</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>DNI</label>
+                                <input type="text"
+                                       id="txtDniCliente"
+                                       required
+                                       maxlength="8"
+                                       placeholder="Ej. 12345678"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="txtNombreCliente" required placeholder="Nombre">
+                            </div>
+                            <div class="form-group">
+                                <label>Ap. Paterno</label>
+                                <input type="text" id="txtApePaterno" required placeholder="Apellido P.">
+                            </div>
+                            <div class="form-group">
+                                <label>Ap. Materno</label>
+                                <input type="text" id="txtApeMaterno" placeholder="Apellido M.">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-grid">
-                        <div class="form-group"><label>Cliente</label><select id="selectCliente" required><option value="">...</option></select></div>
-                        <div class="form-group"><label>Empleado</label><select id="selectEmpleado" required><option value="">...</option></select></div>
+                        <div class="form-group">
+                            <label>Empleado (Vendedor)</label>
+                            <select id="selectEmpleado" required>
+                                <option value="">Seleccione un empleado...</option>
+                                </select>
+                        </div>
                     </div>
 
                     <h3 style="color:#0277bd; margin:20px 0;">Detalles</h3>
