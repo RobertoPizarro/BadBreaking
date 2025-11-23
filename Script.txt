@@ -5,6 +5,7 @@ CREATE USER walterw IDENTIFIED BY 1234
 DEFAULT TABLESPACE users
 TEMPORARY TABLESPACE temp
 QUOTA UNLIMITED ON users;
+SET SERVEROUTPUT ON;
 
 GRANT CONNECT, RESOURCE, CREATE VIEW, CREATE TRIGGER, CREATE PROCEDURE TO walterw;
 
@@ -310,3 +311,124 @@ INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES 
 INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (2, 2, 10, 2.50);
 
 COMMIT;
+
+
+
+-- Configuración para evitar errores de corte de líneas en SQL*Plus
+SET SQLBLANKLINES ON;
+SET DEFINE OFF;
+
+-- ==========================================================
+-- 1. ESPECIFICACIÓN DEL PAQUETE (Declaración)
+-- ==========================================================
+CREATE OR REPLACE PACKAGE pkg_reportes_farmacia AS
+    TYPE T_CURSOR IS REF CURSOR;
+
+    -- Reportes de Inventario y Productos
+    PROCEDURE p_reporte_medicamentos_por_categoria (p_cursor OUT T_CURSOR); -- Inventario valorizado detallado
+    PROCEDURE p_reporte_valorizacion_inventario (p_cursor OUT T_CURSOR);    -- Alias
+    PROCEDURE p_reporte_medicamentos_proximos_vencer (p_dias IN NUMBER, p_cursor OUT T_CURSOR);
+    PROCEDURE p_reporte_medicamentos_sin_stock (p_cursor OUT T_CURSOR);
+    PROCEDURE p_reporte_promedio_precio_categoria (p_cursor OUT T_CURSOR);
+    PROCEDURE p_reporte_proveedores_activos (p_cursor OUT T_CURSOR);
+
+    -- Reportes de Ventas y Finanzas
+    PROCEDURE p_reporte_ventas_del_dia (p_fecha IN DATE DEFAULT TRUNC(SYSDATE), p_cursor OUT T_CURSOR);
+    PROCEDURE p_reporte_ventas_por_empleado (p_cursor OUT T_CURSOR);
+    PROCEDURE p_reporte_ventas_por_cliente (p_cursor OUT T_CURSOR);
+    PROCEDURE p_reporte_finanzas_mensuales (p_cursor OUT T_CURSOR);
+    PROCEDURE p_reporte_top_productos_rentables (p_cursor OUT T_CURSOR);
+
+END pkg_reportes_farmacia;
+/
+
+-- ==========================================================
+-- 2. CUERPO DEL PAQUETE (Lógica)
+-- ==========================================================
+CREATE OR REPLACE PACKAGE BODY pkg_reportes_farmacia AS
+
+    -- A. REPORTE DE INVENTARIO DETALLADO
+    PROCEDURE p_reporte_medicamentos_por_categoria (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR
+            SELECT m.nombre AS producto, c.nombre AS categoria, m.stock AS stock_actual,
+                   m.precio_compra AS costo_unitario, (m.stock * m.precio_compra) AS valor_inversion_total
+            FROM Medicamentos m JOIN Categorias c ON m.id_categoria = c.id_categoria
+            WHERE m.estado = 'Activo' ORDER BY m.nombre;
+    END;
+
+    -- B. FINANZAS MENSUALES (Estado de Resultados)
+    PROCEDURE p_reporte_finanzas_mensuales (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR
+            SELECT TO_CHAR(v.fecha_venta, 'YYYY-MM') AS mes,
+                   COUNT(DISTINCT v.id_venta) AS num_transacciones, -- Corregido para evitar símbolo de moneda
+                   SUM(vd.cantidad) AS productos_vendidos, SUM(v.total_venta) AS ingresos_totales,
+                   SUM(vd.cantidad * m.precio_compra) AS costo_estimado,
+                   (SUM(v.total_venta) - SUM(vd.cantidad * m.precio_compra)) AS ganancia_bruta
+            FROM Ventas v JOIN Venta_Detalle vd ON v.id_venta = vd.id_venta
+            JOIN Medicamentos m ON vd.id_medicamento = m.id_medicamento
+            GROUP BY TO_CHAR(v.fecha_venta, 'YYYY-MM') ORDER BY mes DESC;
+    END;
+
+    -- C. TOP PRODUCTOS (Por dinero generado)
+    PROCEDURE p_reporte_top_productos_rentables (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR
+            SELECT m.nombre as producto, SUM(d.cantidad) as unidades_vendidas, SUM(d.subtotal) as total_generado
+            FROM Venta_Detalle d JOIN Medicamentos m ON d.id_medicamento = m.id_medicamento
+            GROUP BY m.nombre ORDER BY total_generado DESC FETCH FIRST 7 ROWS ONLY;
+    END;
+
+    -- D. VENTAS POR CLIENTE (Frecuencia)
+    PROCEDURE p_reporte_ventas_por_cliente (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR
+            SELECT u.nombre || ' ' || u.apellido_paterno as cliente,
+                   COUNT(v.id_venta) as frecuencia_compras, -- Nombre corregido
+                   SUM(v.total_venta) as gastado_total
+            FROM Ventas v JOIN Clientes c ON v.dni_cliente = c.dni JOIN Usuarios u ON c.dni = u.dni
+            GROUP BY u.nombre, u.apellido_paterno ORDER BY gastado_total DESC;
+    END;
+
+    -- E. VENTAS POR EMPLEADO
+    PROCEDURE p_reporte_ventas_por_empleado (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR
+            SELECT u.nombre || ' ' || u.apellido_paterno as empleado,
+                   COUNT(v.id_venta) as ventas_realizadas,
+                   SUM(v.total_venta) as dinero_recaudado,
+                   ROUND(AVG(v.total_venta), 2) as ticket_promedio
+            FROM Ventas v JOIN Empleados e ON v.dni_empleado = e.dni JOIN Usuarios u ON e.dni = u.dni
+            GROUP BY u.nombre, u.apellido_paterno ORDER BY dinero_recaudado DESC;
+    END;
+
+    -- F. VENTAS DEL DÍA
+    PROCEDURE p_reporte_ventas_del_dia (p_fecha IN DATE DEFAULT TRUNC(SYSDATE), p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR
+            SELECT v.id_venta, uc.nombre || ' ' || uc.apellido_paterno as cliente, v.total_venta
+            FROM Ventas v JOIN Clientes c ON v.dni_cliente = c.dni JOIN Usuarios uc ON c.dni = uc.dni
+            WHERE TRUNC(v.fecha_venta) = NVL(p_fecha, TRUNC(SYSDATE)) ORDER BY v.id_venta DESC;
+    END;
+
+    -- G. PROMEDIOS Y ALERTAS
+    PROCEDURE p_reporte_medicamentos_proximos_vencer (p_dias IN NUMBER, p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR SELECT nombre, lote, TO_CHAR(fecha_vencimiento, 'YYYY-MM-DD') as vence, (fecha_vencimiento - TRUNC(SYSDATE)) as dias_restantes
+        FROM Medicamentos WHERE fecha_vencimiento BETWEEN TRUNC(SYSDATE) AND (TRUNC(SYSDATE) + p_dias) AND estado = 'Activo';
+    END;
+
+    PROCEDURE p_reporte_medicamentos_sin_stock (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR SELECT nombre, lote, estado FROM Medicamentos WHERE stock <= 0 OR estado = 'Agotado';
+    END;
+
+    PROCEDURE p_reporte_promedio_precio_categoria (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR SELECT c.nombre as categoria, COUNT(m.id_medicamento) as cantidad, ROUND(AVG(m.precio_venta), 2) as precio_promedio
+        FROM Medicamentos m JOIN Categorias c ON m.id_categoria = c.id_categoria GROUP BY c.nombre;
+    END;
+
+    PROCEDURE p_reporte_proveedores_activos (p_cursor OUT T_CURSOR) AS BEGIN
+        OPEN p_cursor FOR SELECT nombre, contacto_telefono, email FROM Proveedores WHERE estado = 'Activo';
+    END;
+
+    -- Alias para compatibilidad
+    PROCEDURE p_reporte_valorizacion_inventario (p_cursor OUT T_CURSOR) AS BEGIN
+        p_reporte_medicamentos_por_categoria(p_cursor);
+    END;
+
+END pkg_reportes_farmacia;
+/

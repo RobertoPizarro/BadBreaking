@@ -44,7 +44,46 @@
             </div>
         </div>
     </div>
-    <div id="modalEditar" class="modal"><div class="modal-content"><div class="modal-header"><h2>Editar</h2><span class="close" onclick="cerrarModal('modalEditar')">&times;</span></div><div id="contenidoModalEditar"></div></div></div>
+
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar</h2>
+                <span class="close" onclick="cerrarModal('modalEditar')">&times;</span>
+            </div>
+            <div id="contenidoModalEditar"></div>
+        </div>
+    </div>
+
+    <!-- NUEVA MODAL PARA AGREGAR STOCK -->
+    <div id="modalStock" class="modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-box-open"></i> Agregar Stock</h2>
+            <span class="close" onclick="cerrarModal('modalStock')">&times;</span>
+        </div>
+        <div style="padding: 20px;">
+            <p style="margin-bottom: 15px;">Ingrese la cantidad de unidades a añadir:</p>
+
+            <input type="hidden" id="stockIdMedicamento">
+            <input type="hidden" id="stockPrecioCompra"> <div class="form-group">
+                <input type="number" id="txtCantidadStock" min="1" value="1"
+                       oninput="calcularCostoStock()"
+                       style="text-align: center; font-size: 1.5em; width: 50%; margin: 0 auto;">
+            </div>
+
+            <p id="lblCostoStock" style="margin-top: 15px; color: #0277bd; font-weight: bold; font-size: 1.1em;">
+                Costo estimado: S/. 0.00
+            </p>
+
+            <div class="btn-group" style="justify-content: center; margin-top: 25px;">
+                <button class="btn btn-success" onclick="guardarStock()"><i class="fa-solid fa-plus"></i> Añadir</button>
+                <button class="btn btn-secondary" onclick="cerrarModal('modalStock')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script src="main.js"></script>
 </body>
 </html>
