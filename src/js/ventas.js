@@ -165,6 +165,7 @@ export async function procesarVenta() {
       showMessageModal("Éxito", "Venta registrada correctamente", "success");
       setTimeout(() => {
         limpiarFormularioVenta();
+        cargarMedicamentosVenta(); // Actualizar stock en dropdown
         cargarVentas();
       }, 2000);
     } else showMessageModal("Error", data.mensaje, "error");
@@ -248,7 +249,7 @@ export async function verDetalleVenta(id) {
       );
       cont.innerHTML =
         html +
-        '</tbody></table></div><button class="btn" onclick="cerrarModal(\'modalEditar\')">Cerrar</button>';
+        '</tbody></table></div><button class="btn" onclick="cerrarModal(\'modalEditar\')" style="margin-top: 20px;">Cerrar</button>';
     }
   } catch (e) {
     showMessageModal("Error", e.message, "error");
