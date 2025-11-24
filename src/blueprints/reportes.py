@@ -31,18 +31,22 @@ def ejecutar_reporte(proc_name, params=[]):
 
 @reportes_bp.route('/medicamentos-por-categoria')
 def r1():
-    # Ahora llama al procedimiento de valorización
     return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_por_categoria")
 
 
-@reportes_bp.route('/ingresos-mensuales')
-def r_finanzas():
-    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_finanzas_mensuales")
+@reportes_bp.route('/rentabilidad-productos')
+def r_rentabilidad():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_rentabilidad_productos")
 
 
-@reportes_bp.route('/top-vendidos')
-def r_top():
-    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_top_productos_rentables")
+@reportes_bp.route('/auditoria-cambios')
+def r_auditoria():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_auditoria_cambios")
+
+
+@reportes_bp.route('/medicamentos-inactivos')
+def r_inactivos():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_inactivos")
 
 
 @reportes_bp.route('/proximos-vencer')
@@ -51,36 +55,32 @@ def r2():
     return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_proximos_vencer", [dias])
 
 
-@reportes_bp.route('/ventas-del-dia')
-def r3():
-    f = request.args.get('fecha')
-    # Si no hay fecha, enviamos None para que el procedure use SYSDATE
-    d = date.fromisoformat(f) if f else None
-    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_ventas_del_dia", [d])
+@reportes_bp.route('/sin-stock')
+def r_sin_stock():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_sin_stock")
 
 
 @reportes_bp.route('/ventas-por-empleado')
-def r4(): return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_ventas_por_empleado")
+def r_empleado():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_ventas_por_empleado")
 
 
 @reportes_bp.route('/ventas-por-cliente')
-def r5(): return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_ventas_por_cliente")
+def r_cliente():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_ventas_por_cliente")
 
 
-@reportes_bp.route('/proveedores-activos')
-def r6(): return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_proveedores_activos")
+@reportes_bp.route('/top-vendidos')
+def r_top():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_top_5_vendidos")
 
 
-@reportes_bp.route('/sin-stock')
-def r7(): return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_sin_stock")
-
-
-@reportes_bp.route('/promedio-precios')
-def r8(): return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_promedio_precio_categoria")
+@reportes_bp.route('/ingresos-mensuales')
+def r_ingresos():
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_ingresos_por_mes")
 
 
 # El resumen general sigue siendo mejor hacerlo con queries simples directas
-# o podrías crear otro procedure, pero para mantenerlo simple lo dejamos así:
 @reportes_bp.route('/resumen-general')
 def resumen():
     conn = get_db_connection()
