@@ -5,7 +5,7 @@ import oracledb
 gestion_bp = Blueprint('gestion', __name__, url_prefix='/api')
 
 
-# --- LISTAR MEDICAMENTOS
+# --- LISTAR MEDICAMENTOS ---
 @gestion_bp.route('/medicamentos', methods=['GET'])
 def obtener_medicamentos():
     connection = get_db_connection()
@@ -38,6 +38,7 @@ def obtener_medicamentos():
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
+# --- OBTENER UN MEDICAMENTO ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>', methods=['GET'])
 def obtener_un_medicamento(id_medicamento):
     connection = get_db_connection()
@@ -63,7 +64,7 @@ def obtener_un_medicamento(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-
+# --- REGISTRAR MEDICAMENTO ---
 @gestion_bp.route('/medicamentos', methods=['POST'])
 def registrar_medicamento():
     datos = request.get_json()
@@ -89,10 +90,18 @@ def registrar_medicamento():
         return jsonify({"estado": "exito", "mensaje": "Registrado"}), 201
     except oracledb.DatabaseError as e:
         msg = e.args[0].message
-        if "ORA-20001" in msg: return jsonify({"estado": "error", "mensaje": "Medicamento vencido"}), 400
-        return jsonify({"estado": "error", "mensaje": msg}), 500
+        if "ORA-20001" in msg:
+            return jsonify({"estado": "error", "mensaje": "No se puede registrar un medicamento vencido"}), 400
+        elif "ORA-20004" in msg:
+            return jsonify({"estado": "error", "mensaje": "El precio de venta debe ser mayor al precio de compra"}), 400
+        elif "ORA-20005" in msg:
+            return jsonify({"estado": "error", "mensaje": "El margen de ganancia es muy bajo (mínimo 10%)"}), 400
+        elif "ORA-20006" in msg:
+            return jsonify({"estado": "error", "mensaje": "Ya existe un medicamento con este lote. Verifique si es reposición"}), 409
+        return jsonify({"estado": "error", "mensaje": "Error en la base de datos"}), 500
 
 
+# --- EDITAR MEDICAMENTO COMPLETO ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>', methods=['PUT'])
 def editar_medicamento_completo(id_medicamento):
     datos = request.get_json()
@@ -116,9 +125,21 @@ def editar_medicamento_completo(id_medicamento):
         cursor.callproc("pkg_gestion_farmacia.p_editar_medicamento_completo", keywordParameters=params)
         return jsonify({"estado": "exito", "mensaje": "Medicamento actualizado correctamente"}), 200
     except oracledb.DatabaseError as e:
-        return jsonify({"estado": "error", "mensaje": str(e)}), 500
+        msg = e.args[0].message
+        if "ORA-20001" in msg:
+            return jsonify({"estado": "error", "mensaje": "No se puede registrar un medicamento vencido"}), 400
+        elif "ORA-20004" in msg:
+            return jsonify({"estado": "error", "mensaje": "El precio de venta debe ser mayor al precio de compra"}), 400
+        elif "ORA-20005" in msg:
+            return jsonify({"estado": "error", "mensaje": "El margen de ganancia es muy bajo (mínimo 10%)"}), 400
+        elif "ORA-20006" in msg:
+            return jsonify({"estado": "error", "mensaje": "Ya existe un medicamento con este lote"}), 409
+        elif "ORA-20010" in msg:
+            return jsonify({"estado": "error", "mensaje": "No se puede modificar un medicamento inactivo. Reactívelo primero"}), 403
+        return jsonify({"estado": "error", "mensaje": "Error en la base de datos"}), 500
 
 
+# --- EDITAR PRECIO ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>/precio', methods=['PUT'])
 def editar_precio_medicamento(id_medicamento):
     datos = request.get_json()
@@ -126,16 +147,18 @@ def editar_precio_medicamento(id_medicamento):
     if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
-        cursor.callproc("pkg_gestion_farmacia.p_editar_precio", keywordParameters={'p_id_medicamento': id_medicamento,
-                                                                                   'p_nuevo_precio_compra': datos[
-                                                                                       'nuevo_precio_compra'],
-                                                                                   'p_nuevo_precio_venta': datos[
-                                                                                       'nuevo_precio_venta']})
+        cursor.callproc("pkg_gestion_farmacia.p_editar_precio", 
+                        keywordParameters={
+                            'p_id_medicamento': id_medicamento,
+                            'p_nuevo_precio_compra': datos['nuevo_precio_compra'],
+                            'p_nuevo_precio_venta': datos['nuevo_precio_venta']
+                        })
         return jsonify({"estado": "exito", "mensaje": "Actualizado"}), 200
     except oracledb.DatabaseError as e:
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
+# --- ACTUALIZAR STOCK ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>/stock', methods=['PATCH'])
 def actualizar_stock_medicamento(id_medicamento):
     datos = request.get_json()
@@ -144,13 +167,19 @@ def actualizar_stock_medicamento(id_medicamento):
     try:
         cursor = connection.cursor()
         cursor.callproc("pkg_gestion_farmacia.p_actualizar_stock",
-                        keywordParameters={'p_id_medicamento': id_medicamento,
-                                           'p_cantidad_agregada': datos['cantidad_agregada']})
+                        keywordParameters={
+                            'p_id_medicamento': id_medicamento,
+                            'p_cantidad_agregada': datos['cantidad_agregada']
+                        })
         return jsonify({"estado": "exito", "mensaje": "Stock actualizado"}), 200
     except oracledb.DatabaseError as e:
-        return jsonify({"estado": "error", "mensaje": str(e)}), 500
+        msg = e.args[0].message
+        if "ORA-20010" in msg:
+            return jsonify({"estado": "error", "mensaje": "No se puede actualizar el stock de un medicamento inactivo"}), 403
+        return jsonify({"estado": "error", "mensaje": "Error en la base de datos"}), 500
 
 
+# --- ELIMINAR MEDICAMENTO ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>', methods=['DELETE'])
 def eliminar_medicamento(id_medicamento):
     connection = get_db_connection()
@@ -164,6 +193,7 @@ def eliminar_medicamento(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
+# --- CAMBIAR ESTADO ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>/estado', methods=['PATCH'])
 def cambiar_estado_medicamento(id_medicamento):
     datos = request.get_json()
@@ -176,13 +206,16 @@ def cambiar_estado_medicamento(id_medicamento):
     try:
         cursor = connection.cursor()
         cursor.callproc("pkg_gestion_farmacia.p_cambiar_estado_medicamento",
-                        keywordParameters={'p_id_medicamento': id_medicamento,
-                                           'p_nuevo_estado': nuevo_estado})
+                        keywordParameters={
+                            'p_id_medicamento': id_medicamento,
+                            'p_nuevo_estado': nuevo_estado
+                        })
         return jsonify({"estado": "exito", "mensaje": "Estado actualizado"}), 200
     except oracledb.Error as e:
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
+# --- LISTAR CATEGORIAS ---
 @gestion_bp.route('/categorias', methods=['GET'])
 def obtener_categorias():
     connection = get_db_connection()
@@ -196,6 +229,7 @@ def obtener_categorias():
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
+# --- LISTAR PROVEEDORES ---
 @gestion_bp.route('/proveedores', methods=['GET'])
 def obtener_proveedores():
     connection = get_db_connection()
@@ -209,6 +243,7 @@ def obtener_proveedores():
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
+# --- LISTAR EMPLEADOS ---
 @gestion_bp.route('/empleados', methods=['GET'])
 def obtener_empleados():
     connection = get_db_connection()

@@ -31,7 +31,7 @@ def registrar_venta_completa():
 
         id_venta = int(id_venta_var.getvalue())
 
-        # Insertar detalles (esto se mantiene igual)
+        # Insertar detalles
         sql_det = "INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (:1, :2, :3, :4)"
         for d in datos['detalles']:
             cursor.execute(sql_det, (id_venta, d['id_medicamento'], d['cantidad'], d['precio_unitario_venta']))
@@ -44,8 +44,8 @@ def registrar_venta_completa():
         # Manejo de errores
         error_obj, = e.args
         msg = error_obj.message
-        if "ORA-20002" in msg:
-            return jsonify({"estado": "error", "mensaje": "Stock insuficiente"}), 409
+        if "ORA-20003" in msg:
+            return jsonify({"estado": "error", "mensaje": "Stock insuficiente para completar la venta"}), 409
         return jsonify({"estado": "error", "mensaje": msg}), 500
     finally:
         if cursor: cursor.close()
