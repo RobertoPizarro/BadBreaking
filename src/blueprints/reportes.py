@@ -23,14 +23,16 @@ def ejecutar_reporte(proc_name, params=[]):
         resultados = [dict(zip(columnas, row)) for row in out_cursor]
 
         return jsonify({"estado": "exito", "datos": resultados}), 200
-    except oracledb.Error as e:
+
+    except Exception as e:
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
+    finally:
+        if connection:
+            connection.close()
 
-
-# --- ENDPOINTS QUE LLAMAN A LA BD ---
 
 @reportes_bp.route('/medicamentos-por-categoria')
-def r1():
+def r_categoria():
     return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_por_categoria")
 
 
@@ -41,7 +43,8 @@ def r_rentabilidad():
 
 @reportes_bp.route('/auditoria-cambios')
 def r_auditoria():
-    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_auditoria_cambios")
+    # Mapped to low stock detailed report as per user request to replace audit
+    return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_bajo_stock_detalle")
 
 
 @reportes_bp.route('/medicamentos-inactivos')
@@ -50,8 +53,8 @@ def r_inactivos():
 
 
 @reportes_bp.route('/proximos-vencer')
-def r2():
-    dias = request.args.get('dias', 30, int)
+def r_vencer():
+    dias = request.args.get('dias', default=30, type=int)
     return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_proximos_vencer", [dias])
 
 
