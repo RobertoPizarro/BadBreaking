@@ -36,12 +36,13 @@ const diccionariosReporte = {
   dias_restantes: "Días Restantes",
 
   // REPORTE SIN STOCK
-  id_proveedor: "ID Proveedor",
+  id_proveedor: "Proveedor",
 
   // REPORTE EMPLEADOS
   empleado: "Empleado",
   total_ventas: "N° Ventas",
   total_monto: "Total Recaudado",
+  total_dinero: "Total Recaudado",
 
   // REPORTE CLIENTES
   cliente: "Cliente",
@@ -108,14 +109,18 @@ export async function cargarReporte(endpoint, titulo, params = "") {
           k.includes("subtotal") ||
           k.includes("ingresos") ||
           k === "total_venta" ||
-          k === "total_mes";
+          k === "total_mes" ||
+          k === "total_monto" ||
+          k === "total_dinero";
 
         if (
           isMoney ||
           k.includes("stock") ||
           k.includes("cantidad") ||
           k.includes("total") ||
-          k.includes("dias")
+          k.includes("dias") ||
+          k === "num_ventas" ||
+          k === "total_ventas"
         ) {
           alineacion = 'class="text-right"';
         }
@@ -141,7 +146,9 @@ export async function cargarReporte(endpoint, titulo, params = "") {
             k.includes("subtotal") ||
             k.includes("ingresos") ||
             k === "total_venta" ||
-            k === "total_mes";
+            k === "total_mes" ||
+            k === "total_monto" ||
+            k === "total_dinero";
 
           if (isMoney) {
             valor = `S/. ${parseFloat(valor).toFixed(2)}`;
@@ -162,7 +169,9 @@ export async function cargarReporte(endpoint, titulo, params = "") {
             k.includes("stock") ||
             k.includes("cantidad") ||
             k.includes("dias") ||
-            k.includes("total")
+            k.includes("total") ||
+            k === "num_ventas" ||
+            k === "total_ventas"
           ) {
             html += `<td class="text-right">${valor}</td>`;
           } else {

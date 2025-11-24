@@ -1,3 +1,29 @@
+ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
+
+-- Creación de usuario
+CREATE USER walterw IDENTIFIED BY 1234
+DEFAULT TABLESPACE users
+TEMPORARY TABLESPACE temp
+QUOTA UNLIMITED ON users;
+
+GRANT CONNECT, RESOURCE, CREATE VIEW, CREATE TRIGGER, CREATE PROCEDURE TO walterw;
+
+SET SERVEROUTPUT ON;
+
+-- ==========================================================
+-- 1. LIMPIEZA
+-- ==========================================================
+BEGIN
+    FOR t IN (SELECT table_name FROM user_tables) LOOP
+        EXECUTE IMMEDIATE 'DROP TABLE ' || t.table_name || ' CASCADE CONSTRAINTS PURGE';
+    END LOOP;
+    FOR s IN (SELECT sequence_name FROM user_sequences WHERE sequence_name NOT LIKE 'ISEQ$$%') LOOP
+        EXECUTE IMMEDIATE 'DROP SEQUENCE ' || s.sequence_name;
+    END LOOP;
+END;
+/
+
+
 -- ==========================================================
 -- 2. CREACIÓN DE TABLAS
 -- ==========================================================
@@ -310,6 +336,165 @@ EXCEPTION
 END;
 /
 
+
+-- ==========================================================
+-- 4. DATOS INICIALES
+-- ==========================================================
+-- Categorías y Proveedores
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Analgesicos', 'Alivio dolor');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Antibioticos', 'Infecciones');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Vitaminas', 'Suplementos');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Antiinflamatorios', 'Reducción de inflamación');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Antihistamínicos', 'Tratamiento de alergias');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Antihipertensivos', 'Control de presión arterial');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Antidiabéticos', 'Control de glucosa');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Dermatológicos', 'Cuidado de la piel');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Gastrointestinales', 'Sistema digestivo');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Respiratorios', 'Sistema respiratorio');
+INSERT INTO Categorias (nombre, descripcion) VALUES ('Antiácidos', 'Acidez estomacal');
+INSERT INTO Proveedores (nombre, contacto_telefono, email, direccion) VALUES ('PharmaCorp', '987654321', 'ventas@pharma.com', 'Av Principal');
+INSERT INTO Proveedores (nombre, contacto_telefono, email, direccion) VALUES ('Medilab', '999888777', 'pedidos@medilab.com', 'Jr Secundario');
+INSERT INTO Proveedores (nombre, contacto_telefono, email, direccion) VALUES ('BioFarma SAC', '998877665', 'info@biofarma.pe', 'Av. Arequipa 2450');
+INSERT INTO Proveedores (nombre, contacto_telefono, email, direccion) VALUES ('Droguería Lima', '997766554', 'ventas@droguerialima.com', 'Jr. Cusco 890');
+INSERT INTO Proveedores (nombre, contacto_telefono, email, direccion) VALUES ('MedSupply Peru', '996655443', 'pedidos@medsupply.pe', 'Av. Javier Prado 1234');
+INSERT INTO Proveedores (nombre, contacto_telefono, email, direccion) VALUES ('FarmaDistribuidora', '995544332', 'contacto@farmadist.com', 'Calle Los Olivos 567');
+INSERT INTO Proveedores (nombre, contacto_telefono, email, direccion) VALUES ('GlobalMed Imports', '994433221', 'importaciones@globalmed.pe', 'Av. Colonial 3400');
+
+
+-- Usuarios (Clientes y Empleados)
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('12345678', 'Walter', 'White', 'Hartwell');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('87654322', 'Jesse', 'Pinkman', NULL);
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('45678901', 'Ana', 'Gomez', NULL);
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('87654321', 'Luis', 'Torres', NULL);
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('23456789', 'María', 'López', 'García');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('34567890', 'Carlos', 'Ramírez', 'Flores');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('56789012', 'Rosa', 'Mendoza', 'Silva');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('67890123', 'Pedro', 'Castro', 'Vega');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('78901234', 'Julia', 'Herrera', 'Rojas');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('89012345', 'Diego', 'Morales', 'Campos');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('90123456', 'Carmen', 'Quispe', 'Huamán');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('01234567', 'Roberto', 'Sánchez', 'Díaz');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('11223344', 'Lucía', 'Vargas', 'Torres');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('22334455', 'Fernando', 'Rojas', 'Pérez');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('33445566', 'Patricia', 'Gonzales', 'Medina');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('44556677', 'Miguel', 'Fernández', 'Cruz');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('55667788', 'Andrea', 'Paredes', 'Luna');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('66778899', 'Jorge', 'Valdez', 'Ríos');
+INSERT INTO Usuarios (dni, nombre, apellido_paterno, apellido_materno) VALUES ('77889900', 'Elena', 'Cárdenas', 'Salazar');
+
+-- Roles
+INSERT INTO Empleados (dni, puesto, usuario_sistema) VALUES ('12345678', 'Quimico', 'walterw');
+INSERT INTO Empleados (dni, puesto, usuario_sistema) VALUES ('87654322', 'Tecnico', 'jpinkman');
+INSERT INTO Empleados (dni, puesto, usuario_sistema) VALUES ('23456789', 'Farmacéutica', 'mlopez');
+INSERT INTO Empleados (dni, puesto, usuario_sistema) VALUES ('34567890', 'Asistente', 'cramirez');
+INSERT INTO Empleados (dni, puesto, usuario_sistema) VALUES ('56789012', 'Cajera', 'rmendoza');
+INSERT INTO Empleados (dni, puesto, usuario_sistema) VALUES ('67890123', 'Supervisor', 'pcastro');
+INSERT INTO Clientes (dni) VALUES ('45678901');
+INSERT INTO Clientes (dni) VALUES ('87654321');
+INSERT INTO Clientes (dni) VALUES ('78901234');
+INSERT INTO Clientes (dni) VALUES ('89012345');
+INSERT INTO Clientes (dni) VALUES ('90123456');
+INSERT INTO Clientes (dni) VALUES ('01234567');
+INSERT INTO Clientes (dni) VALUES ('11223344');
+INSERT INTO Clientes (dni) VALUES ('22334455');
+INSERT INTO Clientes (dni) VALUES ('33445566');
+INSERT INTO Clientes (dni) VALUES ('44556677');
+INSERT INTO Clientes (dni) VALUES ('55667788');
+INSERT INTO Clientes (dni) VALUES ('66778899');
+INSERT INTO Clientes (dni) VALUES ('77889900');
+
+-- Medicamentos
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Paracetamol 500mg', 1, 1, 100, 0.50, 1.00, TO_DATE('2026-12-31', 'YYYY-MM-DD'), 'LOTE-P001', 'A-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Amoxicilina 250mg', 2, 2, 50, 1.20, 2.50, TO_DATE('2026-10-31', 'YYYY-MM-DD'), 'LOTE-A002', 'B-03', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Vitamina C 1000mg', 3, 1, 200, 0.80, 1.50, TO_DATE('2027-06-30', 'YYYY-MM-DD'), 'LOTE-V003', 'C-05', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Ibuprofeno 400mg', 1, 1, 150, 0.60, 1.20, TO_DATE('2026-08-15', 'YYYY-MM-DD'), 'LOTE-I004', 'A-02', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Naproxeno 550mg', 4, 3, 120, 0.90, 1.80, TO_DATE('2026-11-20', 'YYYY-MM-DD'), 'LOTE-N005', 'A-03', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Aspirina 100mg', 1, 1, 300, 0.20, 0.50, TO_DATE('2027-01-15', 'YYYY-MM-DD'), 'LOTE-AS06', 'A-04', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Loratadina 10mg', 5, 4, 80, 0.40, 1.00, TO_DATE('2026-05-10', 'YYYY-MM-DD'), 'LOTE-L007', 'B-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Salbutamol Inhalador', 10, 2, 40, 15.00, 28.50, TO_DATE('2025-12-01', 'YYYY-MM-DD'), 'LOTE-S008', 'R-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Cetirizina 10mg', 5, 4, 90, 0.60, 1.50, TO_DATE('2026-09-22', 'YYYY-MM-DD'), 'LOTE-C009', 'B-02', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Omeprazol 20mg', 11, 5, 200, 0.30, 0.80, TO_DATE('2027-03-14', 'YYYY-MM-DD'), 'LOTE-O010', 'G-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Bismutol Jarabe', 9, 5, 60, 12.00, 22.00, TO_DATE('2026-02-28', 'YYYY-MM-DD'), 'LOTE-B011', 'G-02', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Metformina 850mg', 7, 6, 150, 0.50, 1.20, TO_DATE('2026-07-07', 'YYYY-MM-DD'), 'LOTE-M012', 'D-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Losartan 50mg', 6, 6, 180, 0.70, 1.50, TO_DATE('2027-08-30', 'YYYY-MM-DD'), 'LOTE-LO13', 'H-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Clotrimazol Crema', 8, 7, 70, 4.00, 9.50, TO_DATE('2026-12-01', 'YYYY-MM-DD'), 'LOTE-CL15', 'DER-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Dexametasona Amp', 4, 3, 100, 1.50, 3.50, TO_DATE('2026-05-20', 'YYYY-MM-DD'), 'LOTE-D16', 'INY-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Complejo B', 3, 3, 120, 2.00, 5.00, TO_DATE('2027-01-10', 'YYYY-MM-DD'), 'LOTE-CB17', 'INY-02', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Glibenclamida 5mg', 7, 6, 140, 0.10, 0.30, TO_DATE('2026-04-12', 'YYYY-MM-DD'), 'LOTE-G18', 'D-02', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Enalapril 20mg', 6, 6, 160, 0.40, 1.00, TO_DATE('2027-09-05', 'YYYY-MM-DD'), 'LOTE-E19', 'H-02', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Alcohol 70 1L', 8, 4, 50, 8.00, 15.00, TO_DATE('2028-01-01', 'YYYY-MM-DD'), 'LOTE-AL20', 'VAR-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Diclofenaco 75mg', 4, 2, 8, 0.80, 1.80, TO_DATE('2025-12-20', 'YYYY-MM-DD'), 'LOTE-DIC201', 'D-05', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Ketorolaco 30mg', 1, 5, 3, 2.00, 4.50, TO_DATE('2025-12-15', 'YYYY-MM-DD'), 'LOTE-KET203', 'A-08', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Ciprofloxacino 750mg', 2, 1, 7, 1.80, 3.80, TO_DATE('2025-12-22', 'YYYY-MM-DD'), 'LOTE-CIP204', 'B-06', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Ranitidina 300mg', 11, 4, 4, 0.90, 2.00, TO_DATE('2025-12-10', 'YYYY-MM-DD'), 'LOTE-RAN205', 'G-05', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Prednisona 5mg', 4, 3, 9, 0.30, 0.80, TO_DATE('2025-12-12', 'YYYY-MM-DD'), 'LOTE-PRE207', 'D-06', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Levofloxacino 500mg', 2, 5, 2, 2.50, 5.00, TO_DATE('2025-12-08', 'YYYY-MM-DD'), 'LOTE-LEV208', 'B-07', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Clorfeniramina 4mg', 5, 1, 8, 0.25, 0.60, TO_DATE('2025-12-17', 'YYYY-MM-DD'), 'LOTE-CLO209', 'B-08', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Nimesulida 100mg', 4, 4, 0, 0.95, 2.10, TO_DATE('2025-12-14', 'YYYY-MM-DD'), 'LOTE-NIM210', 'D-07', 'Inactivo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Ambroxol Jarabe 120ml', 10, 2, 0, 5.00, 10.00, TO_DATE('2025-12-19', 'YYYY-MM-DD'), 'LOTE-AMB212', 'J-05', 'Inactivo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Acetaminofén Gotas', 1, 5, 3, 4.00, 8.50, TO_DATE('2025-12-13', 'YYYY-MM-DD'), 'LOTE-ACE215', 'PED-01', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Hidrocortisona Crema', 8, 4, 5, 2.80, 6.00, TO_DATE('2025-12-21', 'YYYY-MM-DD'), 'LOTE-HID216', 'DER-03', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Bromhexina Jarabe', 10, 3, 4, 3.50, 7.00, TO_DATE('2025-12-07', 'YYYY-MM-DD'), 'LOTE-BRO217', 'J-06', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Furosemida 40mg', 6, 6, 7, 0.30, 0.70, TO_DATE('2025-12-06', 'YYYY-MM-DD'), 'LOTE-FUR219', 'H-07', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Vitamina B12 Amp', 3, 2, 9, 1.50, 3.50, TO_DATE('2025-12-24', 'YYYY-MM-DD'), 'LOTE-VB220', 'INY-03', 'Activo');
+INSERT INTO Medicamentos (nombre, id_categoria, id_proveedor, stock, precio_compra, precio_venta, fecha_vencimiento, lote, ubicacion, estado) VALUES ('Azitromicina 500mg Tab', 2, 3, 0, 2.20, 4.80, TO_DATE('2025-12-05', 'YYYY-MM-DD'), 'LOTE-AZI221', 'B-09', 'Inactivo');
+
+-- Ventas Históricas
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('45678901', '12345678', SYSTIMESTAMP, 3.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (1, 2, 2, 2.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (1, 3, 1, 1.50);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('87654321', '23456789', SYSTIMESTAMP, 19.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (2, 1, 2, 1.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (2, 7, 1, 1.00);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('78901234', '56789012', SYSTIMESTAMP, 24.40);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (3, 10, 3, 0.80);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (3, 11, 1, 22.00);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('89012345', '67890123', SYSTIMESTAMP, 15.10);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (4, 6, 2, 0.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (4, 15, 1, 9.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (4, 5, 2, 1.80);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (4, 1, 1, 1.00);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('90123456', '34567890', SYSTIMESTAMP, 30.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (5, 8, 1, 28.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (5, 9, 1, 1.50);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('01234567', '23456789', SYSTIMESTAMP, 5.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (6, 17, 1, 5.00);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('11223344', '12345678', SYSTIMESTAMP, 57.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (7, 8, 2, 28.50);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('22334455', '56789012', SYSTIMESTAMP, 4.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (8, 9, 3, 1.50);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('33445566', '87654322', SYSTIMESTAMP, 10.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (9, 13, 2, 1.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (9, 12, 1, 1.20);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (9, 19, 1, 1.00);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('44556677', '67890123', SYSTIMESTAMP, 100.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (10, 15, 2, 9.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (10, 1, 6, 1.00);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('55667788', '34567890', SYSTIMESTAMP, 12.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (11, 4, 10, 1.20);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('66778899', '23456789', SYSTIMESTAMP, 2.40);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (12, 18, 8, 0.30);
+
+INSERT INTO Ventas (dni_cliente, dni_empleado, fecha_venta, total_venta) VALUES ('77889900', '12345678', SYSTIMESTAMP, 60.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (13, 11, 2, 22.00);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (13, 2, 2, 2.50);
+INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_venta) VALUES (13, 16, 2, 3.50);
+
+COMMIT;
+
+
 -- ==========================================================
 -- 5. PAQUETE DE GESTIÓN
 -- ==========================================================
@@ -377,7 +562,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_gestion_farmacia AS
         UPDATE Medicamentos SET estado = 'Inactivo' WHERE id_medicamento = p_id_medicamento;
         COMMIT;
     END;
-
+    
     PROCEDURE p_cambiar_estado_medicamento (p_id_medicamento IN NUMBER, p_nuevo_estado IN VARCHAR2) AS 
         v_stock NUMBER;
     BEGIN
@@ -395,6 +580,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_gestion_farmacia AS
         END IF;
         COMMIT;
     END;
+    
 
     PROCEDURE p_registrar_venta_con_cliente (
         p_dni_cliente IN VARCHAR2, p_nombre_cli IN VARCHAR2, p_ape_pat_cli IN VARCHAR2, p_ape_mat_cli IN VARCHAR2,
@@ -506,8 +692,10 @@ CREATE OR REPLACE PACKAGE BODY pkg_reportes_farmacia AS
     -- 6. SIN STOCK
     PROCEDURE p_reporte_medicamentos_sin_stock (p_cursor OUT T_CURSOR) AS BEGIN 
         OPEN p_cursor FOR 
-            SELECT nombre, lote, estado, id_proveedor
-            FROM Medicamentos WHERE stock <= 0 OR estado = 'Agotado'; 
+            SELECT m.nombre, m.lote, m.estado, p.nombre as proveedor
+            FROM Medicamentos m
+            LEFT JOIN Proveedores p ON m.id_proveedor = p.id_proveedor
+            WHERE m.stock <= 0 OR m.estado = 'Agotado'; 
     END;
 
     -- 7. VENTAS POR EMPLEADO
@@ -544,4 +732,222 @@ CREATE OR REPLACE PACKAGE BODY pkg_reportes_farmacia AS
     END;
 
 END pkg_reportes_farmacia;
+/
+
+
+-- ==========================================================
+-- 1. REPORTE: LISTA DE MEDICAMENTOS POR CATEGORÍA
+-- ==========================================================
+DECLARE
+    CURSOR c_meds IS
+        SELECT c.nombre AS categoria, m.nombre AS medicamento, p.nombre as proveedor, m.stock, m.precio_venta
+        FROM Medicamentos m
+        JOIN Categorias c ON m.id_categoria = c.id_categoria
+        LEFT JOIN Proveedores p ON m.id_proveedor = p.id_proveedor
+        WHERE m.estado = 'Activo'
+        ORDER BY c.nombre, m.nombre;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 1. INVENTARIO POR CATEGORIA ===');
+    FOR r IN c_meds LOOP
+        DBMS_OUTPUT.PUT_LINE('[' || r.categoria || '] ' || r.medicamento || 
+                             ' | Prov: ' || NVL(r.proveedor, 'N/A') ||
+                             ' | Stock: ' || r.stock || 
+                             ' | Precio: S/.' || r.precio_venta);
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 2. REPORTE: RENTABILIDAD POR PRODUCTO
+-- ==========================================================
+DECLARE
+    CURSOR c_rentabilidad IS
+        SELECT m.nombre, c.nombre as categoria, p.nombre as proveedor, m.stock, m.precio_compra, m.precio_venta, 
+               (m.precio_venta - m.precio_compra) AS ganancia_unitaria,
+               ROUND(((m.precio_venta - m.precio_compra) / NULLIF(m.precio_venta,0)) * 100, 1) AS margen_pct
+        FROM Medicamentos m
+        JOIN Categorias c ON m.id_categoria = c.id_categoria
+        LEFT JOIN Proveedores p ON m.id_proveedor = p.id_proveedor
+        WHERE m.estado = 'Activo'
+        ORDER BY ganancia_unitaria DESC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 2. ANALISIS DE RENTABILIDAD (Ganancia por unidad) ===');
+    FOR r IN c_rentabilidad LOOP
+        DBMS_OUTPUT.PUT_LINE(r.nombre || 
+                             ' | Cat: ' || r.categoria ||
+                             ' | Prov: ' || NVL(r.proveedor, 'N/A') ||
+                             ' | Compra: S/.' || r.precio_compra || 
+                             ' | Venta: S/.' || r.precio_venta ||
+                             ' | GANA: S/.' || r.ganancia_unitaria || ' (' || r.margen_pct || '%)');
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 3. REPORTE: MEDICAMENTOS CON BAJO STOCK (DETALLADO)
+-- ==========================================================
+DECLARE
+    CURSOR c_bajo_stock IS
+        SELECT m.nombre, c.nombre as categoria, p.nombre as proveedor, m.stock, m.precio_venta, m.ubicacion
+        FROM Medicamentos m
+        JOIN Categorias c ON m.id_categoria = c.id_categoria
+        LEFT JOIN Proveedores p ON m.id_proveedor = p.id_proveedor
+        WHERE m.stock <= 10 AND m.estado = 'Activo'
+        ORDER BY m.stock ASC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 3. ALERTA DE BAJO STOCK (Menos de 10 unidades) ===');
+    FOR r IN c_bajo_stock LOOP
+        DBMS_OUTPUT.PUT_LINE(r.nombre || ' | Cat: ' || r.categoria || 
+                             ' | Prov: ' || NVL(r.proveedor, 'N/A') || 
+                             ' | Quedan: ' || r.stock ||
+                             ' | Ubic: ' || NVL(r.ubicacion, 'N/A'));
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 4. REPORTE: MEDICAMENTOS INACTIVOS
+-- ==========================================================
+DECLARE
+    CURSOR c_inactivos IS
+        SELECT m.nombre, c.nombre as categoria, m.lote, m.ubicacion, m.stock
+        FROM Medicamentos m
+        JOIN Categorias c ON m.id_categoria = c.id_categoria
+        WHERE m.estado = 'Inactivo'
+        ORDER BY m.nombre;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 4. MEDICAMENTOS INACTIVOS (Para retirar de estantería) ===');
+    FOR r IN c_inactivos LOOP
+        DBMS_OUTPUT.PUT_LINE('Medicamento: ' || r.nombre || 
+                             ' | Cat: ' || r.categoria ||
+                             ' | Ubicación: ' || NVL(r.ubicacion, 'Sin Asignar') || 
+                             ' | Stock remanente: ' || r.stock);
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 5. REPORTE: MEDICAMENTOS PRÓXIMOS A VENCER
+-- ==========================================================
+DECLARE
+    CURSOR c_vencer IS
+        SELECT nombre, fecha_vencimiento, lote, (fecha_vencimiento - TRUNC(SYSDATE)) as dias
+        FROM Medicamentos
+        WHERE fecha_vencimiento BETWEEN SYSDATE AND SYSDATE + 60 -- Ampliado a 60 días
+          AND estado = 'Activo'
+        ORDER BY fecha_vencimiento;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 5. ALERTA DE VENCIMIENTO (Próximos 60 días) ===');
+    FOR r IN c_vencer LOOP
+        DBMS_OUTPUT.PUT_LINE('ALERTA: ' || r.nombre || 
+                             ' | Lote: ' || r.lote || 
+                             ' | Vence en: ' || r.dias || ' días (' || TO_CHAR(r.fecha_vencimiento, 'DD/MM/YYYY') || ')');
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 6. REPORTE: MEDICAMENTOS SIN STOCK
+-- ==========================================================
+DECLARE
+    CURSOR c_sin_stock IS
+        SELECT nombre, id_proveedor
+        FROM Medicamentos
+        WHERE stock <= 0 OR estado = 'Agotado';
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 6. MEDICAMENTOS AGOTADOS (Reponer) ===');
+    FOR r IN c_sin_stock LOOP
+        DBMS_OUTPUT.PUT_LINE('Falta: ' || r.nombre || ' (Contactar Proveedor ID: ' || r.id_proveedor || ')');
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 7. REPORTE: VENTAS POR EMPLEADO (Rendimiento)
+-- ==========================================================
+DECLARE
+    CURSOR c_ventas_emp IS
+        SELECT u.nombre || ' ' || u.apellido_paterno AS empleado,
+               COUNT(v.id_venta) AS total_ventas,
+               SUM(v.total_venta) AS total_monto
+        FROM Ventas v
+        JOIN Empleados e ON v.dni_empleado = e.dni
+        JOIN Usuarios u ON e.dni = u.dni
+        GROUP BY u.nombre, u.apellido_paterno
+        ORDER BY total_monto DESC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 7. RANKING DE VENDEDORES ===');
+    FOR r IN c_ventas_emp LOOP
+        DBMS_OUTPUT.PUT_LINE(r.empleado || 
+                             ' | N° Ventas: ' || r.total_ventas || 
+                             ' | Recaudado: S/.' || NVL(r.total_monto, 0));
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 8. REPORTE: VENTAS POR CLIENTE (Fidelización)
+-- ==========================================================
+DECLARE
+    CURSOR c_ventas_cli IS
+        SELECT u.nombre || ' ' || u.apellido_paterno AS cliente,
+               COUNT(v.id_venta) AS total_compras,
+               SUM(v.total_venta) AS gastado
+        FROM Ventas v
+        JOIN Clientes c ON v.dni_cliente = c.dni
+        JOIN Usuarios u ON c.dni = u.dni
+        GROUP BY u.nombre, u.apellido_paterno
+        ORDER BY gastado DESC
+        FETCH FIRST 10 ROWS ONLY;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 8. TOP MEJORES CLIENTES ===');
+    FOR r IN c_ventas_cli LOOP
+        DBMS_OUTPUT.PUT_LINE(r.cliente || 
+                             ' | Compras: ' || r.total_compras || 
+                             ' | Gasto Total: S/.' || NVL(r.gastado, 0));
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 9. REPORTE: TOP 5 MEDICAMENTOS MÁS VENDIDOS
+-- ==========================================================
+DECLARE
+    CURSOR c_top IS
+        SELECT m.nombre, c.nombre as categoria, SUM(d.cantidad) AS total_vendido
+        FROM Venta_Detalle d
+        JOIN Medicamentos m ON d.id_medicamento = m.id_medicamento
+        JOIN Categorias c ON m.id_categoria = c.id_categoria
+        GROUP BY m.nombre, c.nombre
+        ORDER BY total_vendido DESC
+        FETCH FIRST 5 ROWS ONLY;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 9. TOP 5 PRODUCTOS ESTRELLA ===');
+    FOR r IN c_top LOOP
+        DBMS_OUTPUT.PUT_LINE('#' || c_top%ROWCOUNT || ' ' || r.nombre || 
+                             ' (' || r.categoria || ')' ||
+                             ' | Unidades vendidas: ' || r.total_vendido);
+    END LOOP;
+END;
+/
+
+-- ==========================================================
+-- 10. REPORTE: INGRESOS POR MES (Finanzas)
+-- ==========================================================
+DECLARE
+    CURSOR c_ingresos IS
+        SELECT TO_CHAR(fecha_venta, 'YYYY-MM') AS mes,
+               COUNT(id_venta) AS num_ventas,
+               SUM(total_venta) AS total_mes
+        FROM Ventas
+        GROUP BY TO_CHAR(fecha_venta, 'YYYY-MM')
+        ORDER BY mes DESC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== 10. HISTORIAL DE INGRESOS MENSUALES ===');
+    FOR r IN c_ingresos LOOP
+        DBMS_OUTPUT.PUT_LINE('Mes: ' || r.mes || 
+                             ' | Transacciones: ' || r.num_ventas || 
+                             ' | Total Caja: S/.' || NVL(r.total_mes, 0));
+    END LOOP;
+END;
 /
