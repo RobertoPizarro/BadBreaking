@@ -33,7 +33,7 @@ window.onclick = function (event) {
   if (event.target === modalStock) modalStock.style.display = "none";
 };
 
-// ===== INICIALIZACIÓN INTELIGENTE =====
+// ===== INICIALIZACIÓN=====
 window.addEventListener("load", () => {
   if (document.getElementById("resumenResultado")) cargarResumen();
   if (document.getElementById("selectCategoria")) {
@@ -332,14 +332,11 @@ async function guardarEdicionCompleta(e, id) {
   }
 }
 
-// ===== NUEVA LÓGICA DE STOCK (CON CÁLCULO DE PRECIO) =====
-
 function abrirModalStock(id, precioCompra) {
   document.getElementById("stockIdMedicamento").value = id;
   document.getElementById("stockPrecioCompra").value = precioCompra; // Guardamos precio para calcular
   document.getElementById("txtCantidadStock").value = "1";
 
-  // Inicializar costo en pantalla
   calcularCostoStock();
 
   document.getElementById("modalStock").style.display = "block";
@@ -362,11 +359,8 @@ function calcularCostoStock() {
 async function guardarStock() {
   const id = document.getElementById("stockIdMedicamento").value;
   const cant = document.getElementById("txtCantidadStock").value;
-  // El precio ya lo ve el usuario en la etiqueta, no necesitamos usarlo para validación extra
 
   if (!cant || cant <= 0) return alert("Ingrese una cantidad válida");
-
-  // --- CAMBIO: Eliminamos el confirm() para que sea directo ---
 
   const btn = document.querySelector("#modalStock .btn-success");
   const originalText = btn.innerHTML;
@@ -381,12 +375,8 @@ async function guardarStock() {
     const data = await res.json();
 
     if (data.estado === "exito") {
-      // ÉXITO: Cerramos modal y actualizamos la tabla inmediatamente
       cerrarModal("modalStock");
       cargarMedicamentos();
-
-      // Opcional: Si quieres ver un mensaje discreto en la tabla, podrías usar esto:
-      // mostrarAlerta(document.getElementById('listadoMedicamentos'), 'Stock agregado correctamente', 'success');
     } else {
       alert("Error: " + data.mensaje);
     }
@@ -657,7 +647,7 @@ async function verDetalleVenta(id) {
   }
 }
 
-// ===== REPORTES MEJORADOS & ARREGLADOS =====
+// ===== REPORTES=====
 
 const diccionariosReporte = {
   // Campos básicos
@@ -748,7 +738,6 @@ async function cargarReporte(endpoint, titulo, params = "") {
                     <thead>
                         <tr>`;
 
-      // GENERACIÓN DE ENCABEZADOS CON ALINEACIÓN INTELIGENTE
       claves.forEach((k) => {
         let label =
           diccionariosReporte[k] || k.replace(/_/g, " ").toUpperCase();
@@ -757,7 +746,6 @@ async function cargarReporte(endpoint, titulo, params = "") {
         if (label.includes("COUNT(")) label = "Cantidad";
         if (label.includes("AVG(")) label = "Promedio";
 
-        // Detectar si es columna numérica/dinero para alinear a la derecha
         let alineacion = "";
         const isMoney =
           k.includes("precio") ||
@@ -770,7 +758,6 @@ async function cargarReporte(endpoint, titulo, params = "") {
           k === "total_venta" ||
           k === "total_mes";
 
-        // Alinear a la derecha si es dinero o si es una cantidad numérica relevante
         if (
           isMoney ||
           k.includes("stock") ||
@@ -786,7 +773,6 @@ async function cargarReporte(endpoint, titulo, params = "") {
 
       html += `</tr></thead><tbody>`;
 
-      // Generar filas
       data.datos.forEach((r) => {
         html += "<tr>";
         claves.forEach((k) => {
@@ -794,7 +780,6 @@ async function cargarReporte(endpoint, titulo, params = "") {
 
           if (valor === null) valor = "-";
 
-          // LOGICA DE DINERO REFINADA
           const isMoney =
             k.includes("precio") ||
             k.includes("ganancia") ||
@@ -815,15 +800,12 @@ async function cargarReporte(endpoint, titulo, params = "") {
             String(k).includes("fecha") ||
             String(k).includes("vencimiento")
           ) {
-            // Intentar convertir a fecha y formatear YYYY-MM-DD
             const dateObj = new Date(valor);
             if (!isNaN(dateObj.getTime())) {
               valor = dateObj.toISOString().split("T")[0];
             }
             html += `<td>${valor}</td>`;
-          }
-          // Alineación para otros números (stock, dias, counts)
-          else if (
+          } else if (
             typeof valor === "number" ||
             k.includes("stock") ||
             k.includes("cantidad") ||

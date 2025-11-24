@@ -5,7 +5,7 @@ import oracledb
 gestion_bp = Blueprint('gestion', __name__, url_prefix='/api')
 
 
-# --- LISTAR MEDICAMENTOS (Para la tabla principal) ---
+# --- LISTAR MEDICAMENTOS
 @gestion_bp.route('/medicamentos', methods=['GET'])
 def obtener_medicamentos():
     connection = get_db_connection()
@@ -38,14 +38,12 @@ def obtener_medicamentos():
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- OBTENER UN SOLO MEDICAMENTO (Para llenar el modal de edición) ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>', methods=['GET'])
 def obtener_un_medicamento(id_medicamento):
     connection = get_db_connection()
     if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
-        # Obtenemos todos los campos crudos para rellenar el form
         sql = """
             SELECT id_medicamento, nombre, id_categoria, id_proveedor, stock, 
                    precio_compra, precio_venta, 
@@ -65,7 +63,7 @@ def obtener_un_medicamento(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- REGISTRAR NUEVO MEDICAMENTO ---
+
 @gestion_bp.route('/medicamentos', methods=['POST'])
 def registrar_medicamento():
     datos = request.get_json()
@@ -73,7 +71,6 @@ def registrar_medicamento():
     if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
-        # Aseguramos que los opcionales sean None si vienen vacíos
         prov = int(datos['p_id_proveedor']) if datos.get('p_id_proveedor') else None
 
         params = {
@@ -96,14 +93,12 @@ def registrar_medicamento():
         return jsonify({"estado": "error", "mensaje": msg}), 500
 
 
-# --- EDITAR MEDICAMENTO COMPLETO (PUT) ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>', methods=['PUT'])
 def editar_medicamento_completo(id_medicamento):
     datos = request.get_json()
     connection = get_db_connection()
     try:
         cursor = connection.cursor()
-        # Preparamos los parámetros para el procedure
         params = {
             'p_id_medicamento': id_medicamento,
             'p_nombre': datos['nombre'],
@@ -123,7 +118,6 @@ def editar_medicamento_completo(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- ACTUALIZAR SOLO PRECIO (Mantenemos compatibilidad) ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>/precio', methods=['PUT'])
 def editar_precio_medicamento(id_medicamento):
     datos = request.get_json()
@@ -140,7 +134,6 @@ def editar_precio_medicamento(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- ACTUALIZAR SOLO STOCK ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>/stock', methods=['PATCH'])
 def actualizar_stock_medicamento(id_medicamento):
     datos = request.get_json()
@@ -155,7 +148,6 @@ def actualizar_stock_medicamento(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- ELIMINAR MEDICAMENTO (Lógico) ---
 @gestion_bp.route('/medicamentos/<int:id_medicamento>', methods=['DELETE'])
 def eliminar_medicamento(id_medicamento):
     connection = get_db_connection()
@@ -168,7 +160,6 @@ def eliminar_medicamento(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- OBTENER CATEGORÍAS ---
 @gestion_bp.route('/categorias', methods=['GET'])
 def obtener_categorias():
     connection = get_db_connection()
@@ -181,7 +172,6 @@ def obtener_categorias():
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- OBTENER PROVEEDORES ---
 @gestion_bp.route('/proveedores', methods=['GET'])
 def obtener_proveedores():
     connection = get_db_connection()
@@ -194,7 +184,6 @@ def obtener_proveedores():
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
-# --- OBTENER EMPLEADOS (Para Ventas) ---
 @gestion_bp.route('/empleados', methods=['GET'])
 def obtener_empleados():
     connection = get_db_connection()
@@ -202,7 +191,6 @@ def obtener_empleados():
         return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
-        # Consulta JOIN con Usuarios
         sql = """
             SELECT e.dni, u.nombre, u.apellido_paterno 
             FROM Empleados e 

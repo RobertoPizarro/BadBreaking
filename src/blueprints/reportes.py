@@ -6,19 +6,16 @@ from datetime import date
 reportes_bp = Blueprint('reportes', __name__, url_prefix='/api/reportes')
 
 
-# Función genérica para llamar procedimientos que devuelven un cursor
 def ejecutar_reporte(proc_name, params=[]):
     connection = get_db_connection()
     if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexión"}), 503
     try:
         cursor = connection.cursor()
-        # Variable de salida para el cursor de Oracle
+
         out_cursor = connection.cursor()
 
-        # Llamada al procedimiento almacenado
         cursor.callproc(proc_name, params + [out_cursor])
 
-        # Procesar resultados
         columnas = [col[0].lower() for col in out_cursor.description]
         resultados = [dict(zip(columnas, row)) for row in out_cursor]
 
@@ -43,7 +40,6 @@ def r_rentabilidad():
 
 @reportes_bp.route('/auditoria-cambios')
 def r_auditoria():
-    # Mapped to low stock detailed report as per user request to replace audit
     return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_medicamentos_bajo_stock_detalle")
 
 
@@ -83,7 +79,7 @@ def r_ingresos():
     return ejecutar_reporte("pkg_reportes_farmacia.p_reporte_ingresos_por_mes")
 
 
-# El resumen general sigue siendo mejor hacerlo con queries simples directas
+# El resumen general
 @reportes_bp.route('/resumen-general')
 def resumen():
     conn = get_db_connection()

@@ -16,16 +16,14 @@ def registrar_venta_completa():
         cursor = connection.cursor()
         id_venta_var = cursor.var(oracledb.NUMBER)
 
-        # Datos del cliente vienen anidados ahora
         cli = datos['cliente']
 
-        # Llamamos al nuevo procedimiento que gestiona Cliente + Venta
         cursor.callproc("pkg_gestion_farmacia.p_registrar_venta_con_cliente",
                         keywordParameters={
                             'p_dni_cliente': cli['dni'],
                             'p_nombre_cli': cli['nombre'],
                             'p_ape_pat_cli': cli['apellido_paterno'],
-                            'p_ape_mat_cli': cli.get('apellido_materno', ''),  # .get por si viene vacío
+                            'p_ape_mat_cli': cli.get('apellido_materno', ''),
                             'p_dni_empleado': datos['dni_empleado'],
                             'p_total_venta': datos['total_venta'],
                             'p_id_venta_generada': id_venta_var
@@ -58,9 +56,7 @@ def obtener_ventas():
     connection = get_db_connection()
     try:
         cursor = connection.cursor()
-        # CAMBIO: Se hacen JOINs adicionales a la tabla Usuarios para sacar los nombres
-        # Estructura: Ventas -> Clientes -> Usuarios (para nombre cliente)
-        #           Ventas -> Empleados -> Usuarios (para nombre empleado)
+
         sql = """
             SELECT v.id_venta, 
                    v.fecha_venta, 
@@ -86,7 +82,6 @@ def obtener_detalle_venta(id_venta):
     connection = get_db_connection()
     try:
         cursor = connection.cursor()
-        # CAMBIO: Mismo ajuste de JOINs para obtener el nombre del cliente en el detalle
         sql_cabecera = """
             SELECT v.id_venta, 
                    v.total_venta, 
