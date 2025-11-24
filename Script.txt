@@ -143,16 +143,43 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE TRIGGER trg_auditar_medicamento_del
-AFTER DELETE ON Medicamentos FOR EACH ROW
+CREATE OR REPLACE TRIGGER trg_auditar_medicamento_accion
+AFTER INSERT OR UPDATE OR DELETE ON Medicamentos FOR EACH ROW
 BEGIN
-    INSERT INTO Auditoria_Medicamentos (id_medicamento_afectado, nombre_medicamento, accion_realizada, usuario_db, fecha_accion)
-    VALUES (:OLD.id_medicamento, :OLD.nombre, 'DELETE', USER, SYSTIMESTAMP);
+    IF UPDATING('estado') AND :NEW.estado = 'Inactivo' AND :OLD.estado != 'Inactivo' THEN
+        INSERT INTO Auditoria_Medicamentos (
+            id_medicamento_afectado, 
+            nombre_medicamento, 
+            accion_realizada, 
+            usuario_db, 
+            fecha_accion
+        ) VALUES (
+            :OLD.id_medicamento, 
+            :OLD.nombre, 
+            'ELIMINACION_LOGICA',
+            USER, 
+            SYSTIMESTAMP
+        );
+
+    ELSIF DELETING THEN
+        INSERT INTO Auditoria_Medicamentos (
+            id_medicamento_afectado, 
+            nombre_medicamento, 
+            accion_realizada, 
+            usuario_db, 
+            fecha_accion
+        ) VALUES (
+            :OLD.id_medicamento, 
+            :OLD.nombre, 
+            'ELIMINACION_FISICA', 
+            USER, 
+            SYSTIMESTAMP
+        );
+    END IF;
 END;
 /
-
 -- ==========================================================
--- 4. PAQUETE GESTIÓN (Lógica Principal)
+-- 4. PAQUETE GESTIÓN
 -- ==========================================================
 CREATE OR REPLACE PACKAGE pkg_gestion_farmacia AS
     PROCEDURE p_registrar_medicamento (
@@ -273,7 +300,7 @@ END pkg_reportes_farmacia;
 /
 
 -- ==========================================================
--- 6. DATOS INICIALES (Carga de prueba)
+-- 6. DATOS INICIALES
 -- ==========================================================
 -- Categorías y Proveedores
 INSERT INTO Categorias (nombre, descripcion) VALUES ('Analgesicos', 'Alivio dolor');
@@ -313,13 +340,11 @@ INSERT INTO Venta_Detalle (id_venta, id_medicamento, cantidad, precio_unitario_v
 COMMIT;
 
 
-
--- Configuración para evitar errores de corte de líneas en SQL*Plus
 SET SQLBLANKLINES ON;
 SET DEFINE OFF;
 
 -- ==========================================================
--- 1. ESPECIFICACIÓN DEL PAQUETE (Declaración)
+-- 7. ESPECIFICACIÓN DEL PAQUETE
 -- ==========================================================
 CREATE OR REPLACE PACKAGE pkg_reportes_farmacia AS
     TYPE T_CURSOR IS REF CURSOR;
@@ -343,7 +368,7 @@ END pkg_reportes_farmacia;
 /
 
 -- ==========================================================
--- 2. CUERPO DEL PAQUETE (Lógica)
+-- 8. CUERPO DEL PAQUETE (Lógica)
 -- ==========================================================
 CREATE OR REPLACE PACKAGE BODY pkg_reportes_farmacia AS
 
@@ -431,4 +456,217 @@ CREATE OR REPLACE PACKAGE BODY pkg_reportes_farmacia AS
     END;
 
 END pkg_reportes_farmacia;
+
+/
+
+-- ----------------------------------------
+-- 1. REPORTE: LISTA DE MEDICAMENTOS POR CATEGORÍA
+-- ----------------------------------------
+DECLARE
+    CURSOR c_meds IS
+        SELECT c.nombre AS categoria, m.nombre AS medicamento, m.stock, m.precio_venta
+        FROM Medicamentos m
+        JOIN Categorias c ON m.id_categoria = c.id_categoria
+        WHERE m.estado = 'Activo'
+        ORDER BY c.nombre, m.nombre;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== MEDICAMENTOS POR CATEGORIA ===');
+    FOR r IN c_meds LOOP
+        DBMS_OUTPUT.PUT_LINE('Categoría: ' || r.categoria ||
+                             ' | Medicamento: ' || r.medicamento ||
+                             ' | Stock: ' || r.stock ||
+                             ' | Precio Venta: S/.' || r.precio_venta);
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 2. REPORTE: MEDICAMENTOS PRÓXIMOS A VENCER
+-- ----------------------------------------
+DECLARE
+    CURSOR c_vencer IS
+        SELECT nombre, fecha_vencimiento, lote
+        FROM Medicamentos
+        WHERE fecha_vencimiento BETWEEN SYSDATE AND SYSDATE + 30
+          AND estado = 'Activo'
+        ORDER BY fecha_vencimiento;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== MEDICAMENTOS PRÓXIMOS A VENCER (30 DÍAS) ===');
+    FOR r IN c_vencer LOOP
+        DBMS_OUTPUT.PUT_LINE('Medicamento: ' || r.nombre ||
+                             ' | Lote: ' || r.lote ||
+                             ' | Vence: ' || TO_CHAR(r.fecha_vencimiento, 'DD/MM/YYYY'));
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 3. REPORTE: VENTAS DEL DÍA
+-- ----------------------------------------
+DECLARE
+    CURSOR c_ventas IS
+        SELECT v.id_venta, 
+               uc.nombre || ' ' || uc.apellido_paterno AS cliente,
+               ue.nombre || ' ' || ue.apellido_paterno AS empleado, 
+               v.total_venta
+        FROM Ventas v
+        JOIN Clientes c ON v.dni_cliente = c.dni
+        JOIN Usuarios uc ON c.dni = uc.dni
+        JOIN Empleados e ON v.dni_empleado = e.dni
+        JOIN Usuarios ue ON e.dni = ue.dni
+        WHERE TRUNC(v.fecha_venta) = TRUNC(SYSDATE);
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== VENTAS DEL DÍA ===');
+    FOR r IN c_ventas LOOP
+        DBMS_OUTPUT.PUT_LINE('Venta N°: ' || r.id_venta ||
+                             ' | Cliente: ' || r.cliente ||
+                             ' | Empleado: ' || r.empleado ||
+                             ' | Total: S/.' || r.total_venta);
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 4. REPORTE: VENTAS POR EMPLEADO
+-- ----------------------------------------
+DECLARE
+    CURSOR c_ventas_emp IS
+        SELECT u.nombre || ' ' || u.apellido_paterno AS empleado,
+               COUNT(v.id_venta) AS total_ventas,
+               SUM(v.total_venta) AS total_monto
+        FROM Ventas v
+        JOIN Empleados e ON v.dni_empleado = e.dni
+        JOIN Usuarios u ON e.dni = u.dni
+        GROUP BY u.nombre, u.apellido_paterno
+        ORDER BY total_monto DESC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== VENTAS POR EMPLEADO ===');
+    FOR r IN c_ventas_emp LOOP
+        DBMS_OUTPUT.PUT_LINE('Empleado: ' || r.empleado ||
+                             ' | Ventas: ' || r.total_ventas ||
+                             ' | Monto total: S/.' || NVL(r.total_monto, 0));
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 5. REPORTE: VENTAS POR CLIENTE
+-- ----------------------------------------
+DECLARE
+    CURSOR c_ventas_cli IS
+        SELECT u.nombre || ' ' || u.apellido_paterno AS cliente,
+               COUNT(v.id_venta) AS total_ventas,
+               SUM(v.total_venta) AS total_monto
+        FROM Ventas v
+        JOIN Clientes c ON v.dni_cliente = c.dni
+        JOIN Usuarios u ON c.dni = u.dni
+        GROUP BY u.nombre, u.apellido_paterno
+        ORDER BY total_monto DESC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== VENTAS POR CLIENTE ===');
+    FOR r IN c_ventas_cli LOOP
+        DBMS_OUTPUT.PUT_LINE('Cliente: ' || r.cliente ||
+                             ' | Nº Ventas: ' || r.total_ventas ||
+                             ' | Total: S/.' || NVL(r.total_monto, 0));
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 6. REPORTE: PROVEEDORES ACTIVOS
+-- ----------------------------------------
+DECLARE
+    CURSOR c_prov IS
+        SELECT nombre, contacto_telefono, email
+        FROM Proveedores
+        WHERE estado = 'Activo';
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== PROVEEDORES ACTIVOS ===');
+    FOR r IN c_prov LOOP
+        DBMS_OUTPUT.PUT_LINE('Proveedor: ' || r.nombre ||
+                             ' | Teléfono: ' || NVL(r.contacto_telefono, '-') ||
+                             ' | Email: ' || NVL(r.email, '-'));
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 7. REPORTE: MEDICAMENTOS SIN STOCK
+-- ----------------------------------------
+DECLARE
+    CURSOR c_sin_stock IS
+        SELECT nombre, lote, estado
+        FROM Medicamentos
+        WHERE stock <= 0 OR estado = 'Agotado';
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== MEDICAMENTOS SIN STOCK ===');
+    FOR r IN c_sin_stock LOOP
+        DBMS_OUTPUT.PUT_LINE('Medicamento: ' || r.nombre ||
+                             ' | Lote: ' || r.lote ||
+                             ' | Estado: ' || r.estado);
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 8. REPORTE: PROMEDIO DE PRECIOS POR CATEGORÍA
+-- ----------------------------------------
+DECLARE
+    CURSOR c_prom IS
+        SELECT c.nombre AS categoria,
+               COUNT(m.id_medicamento) AS cantidad_medicamentos,
+               ROUND(AVG(m.precio_venta), 2) AS promedio_precio
+        FROM Medicamentos m
+        JOIN Categorias c ON m.id_categoria = c.id_categoria
+        WHERE m.estado = 'Activo'
+        GROUP BY c.nombre;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== PROMEDIO DE PRECIOS POR CATEGORIA ===');
+    FOR r IN c_prom LOOP
+        DBMS_OUTPUT.PUT_LINE('Categoría: ' || r.categoria ||
+                             ' | Cantidad: ' || r.cantidad_medicamentos ||
+                             ' | Precio Promedio: S/.' || r.promedio_precio);
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 9. REPORTE: TOP 5 MEDICAMENTOS MÁS VENDIDOS
+-- ----------------------------------------
+DECLARE
+    CURSOR c_top IS
+        SELECT m.nombre, SUM(d.cantidad) AS total_vendido
+        FROM Venta_Detalle d
+        JOIN Medicamentos m ON d.id_medicamento = m.id_medicamento
+        GROUP BY m.nombre
+        ORDER BY total_vendido DESC
+        FETCH FIRST 5 ROWS ONLY;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== TOP 5 MEDICAMENTOS MÁS VENDIDOS ===');
+    FOR r IN c_top LOOP
+        DBMS_OUTPUT.PUT_LINE('Medicamento: ' || r.nombre ||
+                             ' | Unidades vendidas: ' || r.total_vendido);
+    END LOOP;
+END;
+/
+
+-- ----------------------------------------
+-- 10. REPORTE: TOTAL DE INGRESOS POR MES
+-- ----------------------------------------
+DECLARE
+    CURSOR c_ingresos IS
+        SELECT TO_CHAR(fecha_venta, 'YYYY-MM') AS mes,
+               COUNT(id_venta) AS num_ventas,
+               SUM(total_venta) AS total_mes
+        FROM Ventas
+        GROUP BY TO_CHAR(fecha_venta, 'YYYY-MM')
+        ORDER BY mes DESC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('=== TOTAL DE INGRESOS POR MES ===');
+    FOR r IN c_ingresos LOOP
+        DBMS_OUTPUT.PUT_LINE('Mes: ' || r.mes ||
+                             ' | Ventas: ' || r.num_ventas ||
+                             ' | Total Ingresos: S/.' || NVL(r.total_mes, 0));
+    END LOOP;
+END;
 /
