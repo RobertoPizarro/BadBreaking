@@ -85,7 +85,6 @@ async function cargarResumen() {
   }
 }
 
-// ===== MEDICAMENTOS =====
 async function cargarCategorias() {
   try {
     const res = await fetch(`${API_URL}/categorias`);
@@ -667,7 +666,7 @@ const diccionariosReporte = {
   precio_venta: "Precio Venta",
   total_venta: "Total Vendido",
   id_venta: "Nro. Venta",
-  fecha_vencimiento: "Vencimiento",
+  fecha_vencimiento: "Fecha de vencimiento",
   contacto_telefono: "Teléfono",
   lote: "Lote",
   estado: "Estado",
@@ -759,14 +758,25 @@ async function cargarReporte(endpoint, titulo, params = "") {
         if (label.includes("AVG(")) label = "Promedio";
 
         // Detectar si es columna numérica/dinero para alinear a la derecha
-        // INCLUYE 'promedio' para que el ticket promedio se alinee bien
         let alineacion = "";
+        const isMoney =
+          k.includes("precio") ||
+          k.includes("ganancia") ||
+          k.includes("gastado") ||
+          k.includes("monto") ||
+          k.includes("caja") ||
+          k.includes("subtotal") ||
+          k.includes("ingresos") ||
+          k === "total_venta" ||
+          k === "total_mes";
+
+        // Alinear a la derecha si es dinero o si es una cantidad numérica relevante
         if (
-          String(k).includes("precio") ||
-          String(k).includes("total") ||
-          String(k).includes("ingresos") ||
-          String(k).includes("subtotal") ||
-          String(k).includes("promedio")
+          isMoney ||
+          k.includes("stock") ||
+          k.includes("cantidad") ||
+          k.includes("total") ||
+          k.includes("dias")
         ) {
           alineacion = 'class="text-right"';
         }
@@ -783,20 +793,44 @@ async function cargarReporte(endpoint, titulo, params = "") {
           let valor = r[k];
 
           if (valor === null) valor = "-";
-          // LOGICA DE DINERO:
-          // Incluimos 'promedio' para que el ticket salga con S/.
-          else if (
-            String(k).includes("precio") ||
-            String(k).includes("total") ||
-            String(k).includes("ingresos") ||
-            String(k).includes("subtotal") ||
-            String(k).includes("promedio")
-          ) {
+
+          // LOGICA DE DINERO REFINADA
+          const isMoney =
+            k.includes("precio") ||
+            k.includes("ganancia") ||
+            k.includes("gastado") ||
+            k.includes("monto") ||
+            k.includes("caja") ||
+            k.includes("subtotal") ||
+            k.includes("ingresos") ||
+            k === "total_venta" ||
+            k === "total_mes";
+
+          if (isMoney) {
             valor = `S/. ${parseFloat(valor).toFixed(2)}`;
             html += `<td class="text-right font-mono"><strong>${valor}</strong></td>`;
-          } else if (String(k).includes("fecha")) {
-            valor = String(valor).split("T")[0];
+          }
+          // LOGICA DE FECHAS REFINADA (YYYY-MM-DD)
+          else if (
+            String(k).includes("fecha") ||
+            String(k).includes("vencimiento")
+          ) {
+            // Intentar convertir a fecha y formatear YYYY-MM-DD
+            const dateObj = new Date(valor);
+            if (!isNaN(dateObj.getTime())) {
+              valor = dateObj.toISOString().split("T")[0];
+            }
             html += `<td>${valor}</td>`;
+          }
+          // Alineación para otros números (stock, dias, counts)
+          else if (
+            typeof valor === "number" ||
+            k.includes("stock") ||
+            k.includes("cantidad") ||
+            k.includes("total") ||
+            k.includes("dias")
+          ) {
+            html += `<td class="text-right">${valor}</td>`;
           } else {
             html += `<td>${valor}</td>`;
           }
