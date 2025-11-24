@@ -97,6 +97,7 @@ def registrar_medicamento():
 def editar_medicamento_completo(id_medicamento):
     datos = request.get_json()
     connection = get_db_connection()
+    if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
         params = {
@@ -122,6 +123,7 @@ def editar_medicamento_completo(id_medicamento):
 def editar_precio_medicamento(id_medicamento):
     datos = request.get_json()
     connection = get_db_connection()
+    if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
         cursor.callproc("pkg_gestion_farmacia.p_editar_precio", keywordParameters={'p_id_medicamento': id_medicamento,
@@ -138,6 +140,7 @@ def editar_precio_medicamento(id_medicamento):
 def actualizar_stock_medicamento(id_medicamento):
     datos = request.get_json()
     connection = get_db_connection()
+    if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
         cursor.callproc("pkg_gestion_farmacia.p_actualizar_stock",
@@ -151,6 +154,7 @@ def actualizar_stock_medicamento(id_medicamento):
 @gestion_bp.route('/medicamentos/<int:id_medicamento>', methods=['DELETE'])
 def eliminar_medicamento(id_medicamento):
     connection = get_db_connection()
+    if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
         cursor.callproc("pkg_gestion_farmacia.p_eliminar_medicamento",
@@ -160,9 +164,29 @@ def eliminar_medicamento(id_medicamento):
         return jsonify({"estado": "error", "mensaje": str(e)}), 500
 
 
+@gestion_bp.route('/medicamentos/<int:id_medicamento>/estado', methods=['PATCH'])
+def cambiar_estado_medicamento(id_medicamento):
+    datos = request.get_json()
+    nuevo_estado = datos.get('estado')
+    if nuevo_estado not in ['Activo', 'Inactivo']:
+        return jsonify({"estado": "error", "mensaje": "Estado inválido"}), 400
+        
+    connection = get_db_connection()
+    if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
+    try:
+        cursor = connection.cursor()
+        cursor.callproc("pkg_gestion_farmacia.p_cambiar_estado_medicamento",
+                        keywordParameters={'p_id_medicamento': id_medicamento,
+                                           'p_nuevo_estado': nuevo_estado})
+        return jsonify({"estado": "exito", "mensaje": "Estado actualizado"}), 200
+    except oracledb.Error as e:
+        return jsonify({"estado": "error", "mensaje": str(e)}), 500
+
+
 @gestion_bp.route('/categorias', methods=['GET'])
 def obtener_categorias():
     connection = get_db_connection()
+    if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id_categoria, nombre FROM Categorias ORDER BY nombre")
@@ -175,6 +199,7 @@ def obtener_categorias():
 @gestion_bp.route('/proveedores', methods=['GET'])
 def obtener_proveedores():
     connection = get_db_connection()
+    if not connection: return jsonify({"estado": "error", "mensaje": "Sin conexion"}), 503
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id_proveedor, nombre, estado FROM Proveedores ORDER BY nombre")

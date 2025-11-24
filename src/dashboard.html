@@ -1,32 +1,50 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Farmacia - Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1><i class="fa-solid fa-hospital"></i> BadBreaking <i class="fa-solid fa-atom"></i></h1>
-            <p>Gestión Completa de Inventario, Ventas y Reportes con Oracle Database</p>
-        </header>
-        <div class="tabs">
-            <a href="dashboard.html" class="tab active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-            <a href="medicamentos.html" class="tab"><i class="fa-solid fa-pills"></i> Medicamentos</a>
-            <a href="ventas.html" class="tab"><i class="fa-solid fa-cash-register"></i> Ventas</a>
-            <a href="reportes.html" class="tab"><i class="fa-solid fa-chart-line"></i> Reportes</a>
+      <header>
+        <h1>
+          <i class="fa-solid fa-hospital"></i> BadBreaking
+          <i class="fa-solid fa-atom"></i>
+        </h1>
+        <p>
+          Gestión Completa de Inventario, Ventas y Reportes con Oracle Database
+        </p>
+      </header>
+      <div class="tabs">
+        <a href="dashboard.html" class="tab active"
+          ><i class="fa-solid fa-chart-pie"></i> Dashboard</a
+        >
+        <a href="html/medicamentos.html" class="tab"
+          ><i class="fa-solid fa-pills"></i> Medicamentos</a
+        >
+        <a href="html/ventas.html" class="tab"
+          ><i class="fa-solid fa-cash-register"></i> Ventas</a
+        >
+        <a href="html/reportes.html" class="tab"
+          ><i class="fa-solid fa-chart-line"></i> Reportes</a
+        >
+      </div>
+      <div class="tab-content active">
+        <div class="form-section">
+          <h2><i class="fa-solid fa-chart-simple"></i> Resumen General</h2>
+          <button class="btn" onclick="cargarResumen()">
+            <i class="fa-solid fa-sync"></i> Actualizar
+          </button>
+          <div id="resumenResultado"></div>
         </div>
-        <div class="tab-content active">
-            <div class="form-section">
-                <h2><i class="fa-solid fa-chart-simple"></i> Resumen General</h2>
-                <button class="btn" onclick="cargarResumen()"><i class="fa-solid fa-sync"></i> Actualizar</button>
-                <div id="resumenResultado"></div>
-            </div>
-        </div>
+      </div>
     </div>
-    <script src="main.js"></script>
-</body>
+    <script type="module" src="js/dashboard.js"></script>
+  </body>
 </html>
