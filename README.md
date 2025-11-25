@@ -21,5 +21,6 @@ SET SERVEROUTPUT ON;
 pip install -r requirements.txt
 python main.py
 ```
-7. Listo
+7. Ingresar a http://127.0.0.1:8080/
+8. Listo
    
